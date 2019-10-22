@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>d3-x3d : 3D Scatter Plot Example</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://x3dom.org/download/dev/x3dom-full.js"></script>
+  <link rel="stylesheet" href="https://x3dom.org/download/dev/x3dom.css" />
+  <script src="https://raw.githack.com/jamesleesaunders/d3-x3d/master/dist/d3-x3d.js"></script>
+</head>
+
+<body>
+  <div id="chartholder"></div>
+
+  <script>
+    // Select chartholder
+    var chartHolder = d3.select("#chartholder");
+
+    // Generate some data  //http://metagrid2.sv.vt.edu/~npolys/InfoVis2019/pollen.csv
+    //var myData = d3.x3d.randomData.dataset3(200);
+
+    var newData = d3.csv("pollen.csv").then (function(data) { //console.log(d[0]);
+      data.forEach(function(d){
+        d.key = d.OBSERVATION_NUMBER;
+        d.ridge= +d.RIDGE;
+        d.nub= +d.NUB;
+        d.crack= +d.CRACK;
+        d.weight= +d.WEIGHT;
+        d.density= +d.DENSITY;
+      });
+
+//		 console.log(data);
+
+      var myChart = d3.x3d.chart.scatterPlot();
+
+
+//	array.map(function(a){return a.slice(0);});
+      //  chartHolder.datum(data).call(myChart);
+
+      const slices = [];
+
+      data.forEach((data, index) => {
+        const prev = index > 0 ? slices[index - 1] : null;
+        slices.push({
+          key: 'Point'+data.key,
+          value: data.density,
+          x: data.ridge,
+          y: data.nub,
+          z: data.crack
+        })
+
+      });
+
+      var thisData = [];
+      //console.log(slices);
+      thisData.key = 'Bubbles';
+      thisData.values = slices ;
+
+      console.log(thisData);
+
+
+//  var myData = d3.x3d.randomData.dataset3(200);
+//  console.log(myData);
+
+      chartHolder.datum(thisData).call(myChart);
+
+
+    });
+
+
+
+
+
+  </script>
