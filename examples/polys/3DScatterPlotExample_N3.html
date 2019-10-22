@@ -17,32 +17,31 @@
     var chartHolder = d3.select("#chartholder");
 
     // Generate some data  //http://metagrid2.sv.vt.edu/~npolys/InfoVis2019/pollen.csv
-    //var myData = d3.x3d.randomData.dataset3(200);
+    // var myData = d3.x3d.randomData.dataset3(200);
 
-    var newData = d3.csv("pollen.csv").then (function(data) { //console.log(d[0]);
-      data.forEach(function(d){
+    var newData = d3.csv("pollen.csv").then(function(data) {
+      // console.log(d[0]);
+      data.forEach(function(d) {
         d.key = d.OBSERVATION_NUMBER;
-        d.ridge= +d.RIDGE;
-        d.nub= +d.NUB;
-        d.crack= +d.CRACK;
-        d.weight= +d.WEIGHT;
-        d.density= +d.DENSITY;
+        d.ridge = +d.RIDGE;
+        d.nub = +d.NUB;
+        d.crack = +d.CRACK;
+        d.weight = +d.WEIGHT;
+        d.density = +d.DENSITY;
       });
-
-//		 console.log(data);
+      // console.log(data);
 
       var myChart = d3.x3d.chart.scatterPlot();
 
-
-//	array.map(function(a){return a.slice(0);});
-      //  chartHolder.datum(data).call(myChart);
+      // array.map(function(a) { return a.slice(0);} );
+      // chartHolder.datum(data).call(myChart);
 
       const slices = [];
 
       data.forEach((data, index) => {
         const prev = index > 0 ? slices[index - 1] : null;
         slices.push({
-          key: 'Point'+data.key,
+          key: 'Point' + data.key,
           value: data.density,
           x: data.ridge,
           y: data.nub,
@@ -52,23 +51,19 @@
       });
 
       var thisData = [];
-      //console.log(slices);
+      // console.log(slices);
       thisData.key = 'Bubbles';
-      thisData.values = slices ;
+      thisData.values = slices;
 
       console.log(thisData);
 
-
-//  var myData = d3.x3d.randomData.dataset3(200);
-//  console.log(myData);
+      // var myData = d3.x3d.randomData.dataset3(200);
+      // console.log(myData);
 
       chartHolder.datum(thisData).call(myChart);
 
-
+      x3dom.reload();
     });
 
-
-
-
-
   </script>
+</body>
