@@ -19,8 +19,8 @@
 
       // Declare the chart component
       var myChart = d3.x3d.chart.scatterPlot()
-        .colors(d3.schemeRdYlGn[8]);
-        //.sizeRange([0.05, 3]);
+        //.colors(d3.schemeRdYlGn[8]);
+        .sizeRange([0.05, 3]);
 
       // Generate chart
       chartHolder.datum(data).call(myChart);
