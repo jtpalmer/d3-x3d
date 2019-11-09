@@ -45,8 +45,6 @@ export default function() {
 	/* Components */
 	const viewpoint = component.viewpoint();
 	const axis = component.axisThreePlane();
-	const crosshair = component.crosshair();
-	const label = component.label();
 	const bubbles = component.bubbles2();
 
 	/**
@@ -56,33 +54,52 @@ export default function() {
 	 * @param {Array} data - Chart data.
 	 */
 	const init = function(data) {
-		const { valueExtent, coordinatesMax } = dataTransform(data).summary();
-		const { x: maxX, y: maxY, z: maxZ } = coordinatesMax;
-		const { x: dimensionX, y: dimensionY, z: dimensionZ } = dimensions;
+
+		let newData = {};
+		['x', 'y', 'z', 'size', 'color'].forEach((dimension) => {
+			let set = {
+				key: dimension,
+				values: []
+			};
+
+			data.values.forEach((d) => {
+				let key = mappings[dimension];
+				let value = d.values.find((v) => v.key === key).value;
+				set.values.push({ key: key, value: value });
+			});
+
+			newData[dimension] = dataTransform(set).summary();
+		});
+
+		let extentX = newData.x.valueExtent;
+		let extentY = newData.y.valueExtent;
+		let extentZ = newData.z.valueExtent;
+		let extentSize = newData.size.valueExtent;
+		let extentColor = newData.color.valueExtent;
 
 		xScale = d3.scaleLinear()
-			.domain([0, maxX])
-			.range([0, dimensionX]);
+			.domain(extentX)
+			.range([0, dimensions.x]);
 
 		yScale = d3.scaleLinear()
-			.domain([0, maxY])
-			.range([0, dimensionY]);
+			.domain(extentY)
+			.range([0, dimensions.y]);
 
 		zScale = d3.scaleLinear()
-			.domain([0, maxZ])
-			.range([0, dimensionZ]);
+			.domain(extentZ)
+			.range([0, dimensions.z]);
 
 		sizeScale = d3.scaleLinear()
-			.domain(valueExtent)
+			.domain(extentSize)
 			.range(sizeRange);
 
 		if (color) {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range([color, color]);
 		} else {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range(colors);
 		}
 	};
@@ -136,46 +153,13 @@ export default function() {
 			scene.select(".axis")
 				.call(axis);
 
-			// Add Crosshair
-			crosshair.xScale(xScale)
-				.yScale(yScale)
-				.zScale(zScale);
-
-			// Add Labels
-			label.xScale(xScale)
-				.yScale(yScale)
-				.zScale(zScale)
-				.offset(0.5);
-
 			// Add Bubbles
 			bubbles.xScale(xScale)
 				.mappings(mappings)
 				.yScale(yScale)
 				.zScale(zScale)
 				.sizeScale(sizeScale)
-				.colorScale(colorScale)
-				.on("d3X3dClick", function(e) {
-					const d = d3.select(e.target).datum();
-					scene.select(".crosshair")
-						.datum(d)
-						.classed("crosshair", true)
-						.each(function() {
-							d3.select(this).call(crosshair);
-						});
-				})
-				.on("d3X3dMouseOver", function(e) {
-					const d = d3.select(e.target).datum();
-					scene.select(".label")
-						.datum(d)
-						.each(function() {
-							d3.select(this).call(label);
-						});
-				})
-				.on("d3X3dMouseOut", function(e) {
-					scene.select(".label")
-						.selectAll("*")
-						.remove();
-				});
+				.colorScale(colorScale);
 
 			scene.select(".bubbles")
 				.datum(data)

@@ -32,41 +32,59 @@ export default function() {
 	 * @param {Array} data - Chart data.
 	 */
 	const init = function(data) {
-		const { valueExtent, coordinatesMax } = dataTransform(data).summary();
-		const { x: maxX, y: maxY, z: maxZ } = coordinatesMax;
-		const { x: dimensionX, y: dimensionY, z: dimensionZ } = dimensions;
+		let newData = {};
+		['x', 'y', 'z', 'size', 'color'].forEach((dimension) => {
+			let set = {
+				key: dimension,
+				values: []
+			};
+
+			data.values.forEach((d) => {
+				let key = mappings[dimension];
+				let value = d.values.find((v) => v.key === key).value;
+				set.values.push({ key: key, value: value });
+			});
+
+			newData[dimension] = dataTransform(set).summary();
+		});
+
+		let extentX = newData.x.valueExtent;
+		let extentY = newData.y.valueExtent;
+		let extentZ = newData.z.valueExtent;
+		let extentSize = newData.size.valueExtent;
+		let extentColor = newData.color.valueExtent;
 
 		if (typeof xScale === "undefined") {
 			xScale = d3.scaleLinear()
-				.domain([0, maxX])
-				.range([0, dimensionX]);
+				.domain(extentX)
+				.range([0, dimensions.x]);
 		}
 
 		if (typeof yScale === "undefined") {
 			yScale = d3.scaleLinear()
-				.domain([0, maxY])
-				.range([0, dimensionY]);
+				.domain(extentY)
+				.range([0, dimensions.y]);
 		}
 
 		if (typeof zScale === "undefined") {
 			zScale = d3.scaleLinear()
-				.domain([0, maxZ])
-				.range([0, dimensionZ]);
+				.domain(extentZ)
+				.range([0, dimensions.z]);
 		}
 
 		if (typeof sizeScale === "undefined") {
 			sizeScale = d3.scaleLinear()
-				.domain(valueExtent)
+				.domain(extentSize)
 				.range(sizeRange);
 		}
 
 		if (color) {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range([color, color]);
 		} else if (typeof colorScale === "undefined") {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range(colors);
 		}
 	};
