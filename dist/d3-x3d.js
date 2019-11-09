@@ -1358,11 +1358,11 @@
   			domain.exit().remove();
 
   			// Tick Lines
-  			var ticks = element.selectAll(".tick").data(tickValues, function (d) {
+  			var ticks = element.selectAll(".tickLine").data(tickValues, function (d) {
   				return d;
   			});
 
-  			ticks.enter().append("Transform").attr("class", "tick").attr("translation", function (t) {
+  			ticks.enter().append("Transform").attr("class", "tickLine").attr("translation", function (t) {
   				return axisDirectionVector.map(function (a) {
   					return scale(t) * a;
   				}).join(" ");
@@ -1378,13 +1378,13 @@
 
   			ticks.exit().remove();
 
-  			// Labels
+  			// Tick Labels
   			if (tickFormat !== "") {
-  				var labels = element.selectAll(".label").data(tickValues, function (d) {
+  				var labels = element.selectAll(".tickLabel").data(tickValues, function (d) {
   					return d;
   				});
 
-  				labels.enter().append("Transform").attr("class", "label").attr("translation", function (t) {
+  				labels.enter().append("Transform").attr("class", "tickLabel").attr("translation", function (t) {
   					return axisDirectionVector.map(function (a) {
   						return scale(t) * a;
   					}).join(" ");
@@ -1408,7 +1408,7 @@
 
   				labels.exit().remove();
   			} else {
-  				element.selectAll(".label").remove();
+  				element.selectAll(".tickLabel").remove();
   			}
   		});
   	};
@@ -2189,11 +2189,11 @@
   	var init = function init(data) {
   		var _dataTransform$summar = dataTransform(data).summary(),
   		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax;
+  		    coordinatesExtent = _dataTransform$summar.coordinatesExtent;
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
+  		var extentX = coordinatesExtent.x,
+  		    extentY = coordinatesExtent.y,
+  		    extentZ = coordinatesExtent.z;
   		var _dimensions = dimensions,
   		    dimensionX = _dimensions.x,
   		    dimensionY = _dimensions.y,
@@ -2201,15 +2201,15 @@
 
 
   		if (typeof xScale === "undefined") {
-  			xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  			xScale = d3.scaleLinear().domain(extentX).range([0, dimensionX]);
   		}
 
   		if (typeof yScale === "undefined") {
-  			yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  			yScale = d3.scaleLinear().domain(extentY).range([0, dimensionY]);
   		}
 
   		if (typeof zScale === "undefined") {
-  			zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  			zScale = d3.scaleLinear().domain(extentZ).range([0, dimensionZ]);
   		}
 
   		if (typeof sizeScale === "undefined") {
@@ -2428,39 +2428,50 @@
     * @param {Array} data - Chart data.
     */
   	var init = function init(data) {
-  		var _dataTransform$summar = dataTransform(data).summary(),
-  		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax;
+  		var newData = {};
+  		['x', 'y', 'z', 'size', 'color'].forEach(function (dimension) {
+  			var set = {
+  				key: dimension,
+  				values: []
+  			};
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
-  		var _dimensions = dimensions,
-  		    dimensionX = _dimensions.x,
-  		    dimensionY = _dimensions.y,
-  		    dimensionZ = _dimensions.z;
+  			data.values.forEach(function (d) {
+  				var key = mappings[dimension];
+  				var value = d.values.find(function (v) {
+  					return v.key === key;
+  				}).value;
+  				set.values.push({ key: key, value: value });
+  			});
 
+  			newData[dimension] = dataTransform(set).summary();
+  		});
+
+  		var extentX = newData.x.valueExtent;
+  		var extentY = newData.y.valueExtent;
+  		var extentZ = newData.z.valueExtent;
+  		var extentSize = newData.size.valueExtent;
+  		var extentColor = newData.color.valueExtent;
 
   		if (typeof xScale === "undefined") {
-  			xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  			xScale = d3.scaleLinear().domain(extentX).range([0, dimensions.x]);
   		}
 
   		if (typeof yScale === "undefined") {
-  			yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  			yScale = d3.scaleLinear().domain(extentY).range([0, dimensions.y]);
   		}
 
   		if (typeof zScale === "undefined") {
-  			zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  			zScale = d3.scaleLinear().domain(extentZ).range([0, dimensions.z]);
   		}
 
   		if (typeof sizeScale === "undefined") {
-  			sizeScale = d3.scaleLinear().domain(valueExtent).range(sizeRange);
+  			sizeScale = d3.scaleLinear().domain(extentSize).range(sizeRange);
   		}
 
   		if (color) {
-  			colorScale = d3.scaleQuantize().domain(valueExtent).range([color, color]);
+  			colorScale = d3.scaleQuantize().domain(extentColor).range([color, color]);
   		} else if (typeof colorScale === "undefined") {
-  			colorScale = d3.scaleQuantize().domain(valueExtent).range(colors);
+  			colorScale = d3.scaleQuantize().domain(extentColor).range(colors);
   		}
   	};
 
@@ -2730,22 +2741,22 @@
   		var _dataTransform$summar = dataTransform(data).summary(),
   		    rowKeys = _dataTransform$summar.rowKeys,
   		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax;
+  		    coordinatesExtent = _dataTransform$summar.coordinatesExtent;
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
+  		var extentX = coordinatesExtent.x,
+  		    extentY = coordinatesExtent.y,
+  		    extentZ = coordinatesExtent.z;
   		var _dimensions = dimensions,
   		    dimensionX = _dimensions.x,
   		    dimensionY = _dimensions.y,
   		    dimensionZ = _dimensions.z;
 
 
-  		xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  		xScale = d3.scaleLinear().domain(extentX).range([0, dimensionX]);
 
-  		yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  		yScale = d3.scaleLinear().domain(extentY).range([0, dimensionY]);
 
-  		zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  		zScale = d3.scaleLinear().domain(extentZ).range([0, dimensionZ]);
 
   		colorDomain = arrayUnique(colorDomain, rowKeys);
   		colorScale = d3.scaleOrdinal().domain(colorDomain).range(colors);
@@ -5893,23 +5904,23 @@
   	var init = function init(data) {
   		var _dataTransform$summar = dataTransform(data).summary(),
   		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax,
+  		    coordinatesExtent = _dataTransform$summar.coordinatesExtent,
   		    rowKeys = _dataTransform$summar.rowKeys;
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
+  		var extentX = coordinatesExtent.x,
+  		    extentY = coordinatesExtent.y,
+  		    extentZ = coordinatesExtent.z;
   		var _dimensions = dimensions,
   		    dimensionX = _dimensions.x,
   		    dimensionY = _dimensions.y,
   		    dimensionZ = _dimensions.z;
 
 
-  		xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  		xScale = d3.scaleLinear().domain(extentX).range([0, dimensionX]);
 
-  		yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  		yScale = d3.scaleLinear().domain(extentY).range([0, dimensionY]);
 
-  		zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  		zScale = d3.scaleLinear().domain(extentZ).range([0, dimensionZ]);
 
   		colorScale = d3.scaleOrdinal().domain(rowKeys).range(colors);
 
@@ -6608,22 +6619,22 @@
   	var init = function init(data) {
   		var _dataTransform$summar = dataTransform(data).summary(),
   		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax;
+  		    coordinatesExtent = _dataTransform$summar.coordinatesExtent;
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
+  		var extentX = coordinatesExtent.x,
+  		    extentY = coordinatesExtent.y,
+  		    extentZ = coordinatesExtent.z;
   		var _dimensions = dimensions,
   		    dimensionX = _dimensions.x,
   		    dimensionY = _dimensions.y,
   		    dimensionZ = _dimensions.z;
 
 
-  		xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  		xScale = d3.scaleLinear().domain(extentX).range([0, dimensionX]);
 
-  		yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  		yScale = d3.scaleLinear().domain(extentY).range([0, dimensionY]);
 
-  		zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  		zScale = d3.scaleLinear().domain(extentZ).range([0, dimensionZ]);
 
   		sizeScale = d3.scaleLinear().domain(valueExtent).range(sizeRange);
 
@@ -6923,8 +6934,6 @@
   	/* Components */
   	var viewpoint = component.viewpoint();
   	var axis = component.axisThreePlane();
-  	var crosshair = component.crosshair();
-  	var label = component.label();
   	var bubbles = component.bubbles2();
 
   	/**
@@ -6934,31 +6943,43 @@
     * @param {Array} data - Chart data.
     */
   	var init = function init(data) {
-  		var _dataTransform$summar = dataTransform(data).summary(),
-  		    valueExtent = _dataTransform$summar.valueExtent,
-  		    coordinatesMax = _dataTransform$summar.coordinatesMax;
 
-  		var maxX = coordinatesMax.x,
-  		    maxY = coordinatesMax.y,
-  		    maxZ = coordinatesMax.z;
-  		var _dimensions = dimensions,
-  		    dimensionX = _dimensions.x,
-  		    dimensionY = _dimensions.y,
-  		    dimensionZ = _dimensions.z;
+  		var newData = {};
+  		['x', 'y', 'z', 'size', 'color'].forEach(function (dimension) {
+  			var set = {
+  				key: dimension,
+  				values: []
+  			};
 
+  			data.values.forEach(function (d) {
+  				var key = mappings[dimension];
+  				var value = d.values.find(function (v) {
+  					return v.key === key;
+  				}).value;
+  				set.values.push({ key: key, value: value });
+  			});
 
-  		xScale = d3.scaleLinear().domain([0, maxX]).range([0, dimensionX]);
+  			newData[dimension] = dataTransform(set).summary();
+  		});
 
-  		yScale = d3.scaleLinear().domain([0, maxY]).range([0, dimensionY]);
+  		var extentX = newData.x.valueExtent;
+  		var extentY = newData.y.valueExtent;
+  		var extentZ = newData.z.valueExtent;
+  		var extentSize = newData.size.valueExtent;
+  		var extentColor = newData.color.valueExtent;
 
-  		zScale = d3.scaleLinear().domain([0, maxZ]).range([0, dimensionZ]);
+  		xScale = d3.scaleLinear().domain(extentX).range([0, dimensions.x]);
 
-  		sizeScale = d3.scaleLinear().domain(valueExtent).range(sizeRange);
+  		yScale = d3.scaleLinear().domain(extentY).range([0, dimensions.y]);
+
+  		zScale = d3.scaleLinear().domain(extentZ).range([0, dimensions.z]);
+
+  		sizeScale = d3.scaleLinear().domain(extentSize).range(sizeRange);
 
   		if (color) {
-  			colorScale = d3.scaleQuantize().domain(valueExtent).range([color, color]);
+  			colorScale = d3.scaleQuantize().domain(extentColor).range([color, color]);
   		} else {
-  			colorScale = d3.scaleQuantize().domain(valueExtent).range(colors);
+  			colorScale = d3.scaleQuantize().domain(extentColor).range(colors);
   		}
   	};
 
@@ -6999,26 +7020,8 @@
 
   			scene.select(".axis").call(axis);
 
-  			// Add Crosshair
-  			crosshair.xScale(xScale).yScale(yScale).zScale(zScale);
-
-  			// Add Labels
-  			label.xScale(xScale).yScale(yScale).zScale(zScale).offset(0.5);
-
   			// Add Bubbles
-  			bubbles.xScale(xScale).mappings(mappings).yScale(yScale).zScale(zScale).sizeScale(sizeScale).colorScale(colorScale).on("d3X3dClick", function (e) {
-  				var d = d3.select(e.target).datum();
-  				scene.select(".crosshair").datum(d).classed("crosshair", true).each(function () {
-  					d3.select(this).call(crosshair);
-  				});
-  			}).on("d3X3dMouseOver", function (e) {
-  				var d = d3.select(e.target).datum();
-  				scene.select(".label").datum(d).each(function () {
-  					d3.select(this).call(label);
-  				});
-  			}).on("d3X3dMouseOut", function (e) {
-  				scene.select(".label").selectAll("*").remove();
-  			});
+  			bubbles.xScale(xScale).mappings(mappings).yScale(yScale).zScale(zScale).sizeScale(sizeScale).colorScale(colorScale);
 
   			scene.select(".bubbles").datum(data).call(bubbles);
   		});

@@ -31,25 +31,25 @@ export default function() {
 	 * @param {Array} data - Chart data.
 	 */
 	const init = function(data) {
-		const { valueExtent, coordinatesMax } = dataTransform(data).summary();
-		const { x: maxX, y: maxY, z: maxZ } = coordinatesMax;
+		const { valueExtent, coordinatesExtent } = dataTransform(data).summary();
+		const { x: extentX, y: extentY, z: extentZ } = coordinatesExtent;
 		const { x: dimensionX, y: dimensionY, z: dimensionZ } = dimensions;
 
 		if (typeof xScale === "undefined") {
 			xScale = d3.scaleLinear()
-				.domain([0, maxX])
+				.domain(extentX)
 				.range([0, dimensionX]);
 		}
 
 		if (typeof yScale === "undefined") {
 			yScale = d3.scaleLinear()
-				.domain([0, maxY])
+				.domain(extentY)
 				.range([0, dimensionY]);
 		}
 
 		if (typeof zScale === "undefined") {
 			zScale = d3.scaleLinear()
-				.domain([0, maxZ])
+				.domain(extentZ)
 				.range([0, dimensionZ]);
 		}
 
