@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>d3-x3d : 3D Scatter Plot Example</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://x3dom.org/download/dev/x3dom-full.js"></script>
+  <link rel="stylesheet" href="https://x3dom.org/download/dev/x3dom.css" />
+  <script src="../../dist/d3-x3d.js"></script>
+</head>
+
+<body>
+  <div id="chartholder"></div>
+
+  <script>
+    d3.csv("https://experimentaldesign.io/data/MNIST_PHATE_3D.csv")
+      .then(function(data) {
+
+        var points = data.slice(0, 10000).map((d, i) => {
+          return {
+            key: 'Point_' + i,
+            values: [
+              { key: "value", value: d.value },
+              { key: "x", value: d.x },
+              { key: "y", value: d.y },
+              { key: "z", value: d.z },
+            ]
+          };
+        });
+
+        var newData = {
+          key: 'Pollen',
+          values: points
+        };
+
+        // Select chartholder
+        var chartHolder = d3.select("#chartholder");
+
+        // Declare the chart component
+        var myChart = d3.x3d.chart.scatterPlot2()
+          .mappings({ x: 'x', y: 'y', z: 'z', size: 'value', color: 'value' })
+          .colors(d3.schemeRdYlGn[8])
+          .sizeRange([2, 2]);
+
+        // Attach chart and data to the chartholder
+        chartHolder.datum(newData).call(myChart);
+      })
+      .finally(() => {
+        x3dom.reload();
+      });
+
+  </script>
+</body>

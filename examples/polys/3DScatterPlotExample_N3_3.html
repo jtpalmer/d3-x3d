@@ -19,20 +19,13 @@
 
       // Declare the chart component
       var myChart = d3.x3d.chart.scatterPlot2()
-        .mappings({ x: 'ridge', y: 'nub', z: 'crack', size: 'weight', color: 'density' })
+        .mappings({ x: "ridge", y: "nub", z: "crack", size: "density", color: "weight" })
         .colors(d3.schemeRdYlGn[8])
-        .sizeRange([0.05, 3]);
+        .sizeRange([2.0, 16.0]);
 
       // Generate chart
       chartHolder.datum(data).call(myChart);
     }
-
-
-    // Generate Chart from Random Data
-    // var randomData = d3.x3d.randomData.dataset3(200);
-    // console.log(randomData);
-    // loadChart(randomData);
-
 
     // Generate Chart fro Pollen CSV Data
     // Source: http://metagrid2.sv.vt.edu/~npolys/InfoVis2019/pollen.csv
@@ -40,7 +33,7 @@
       .then((data) => {
         // console.log(data);
 
-        var points = data.slice(0, 200).map((d) => {
+        var points = data.map((d) => {
           return {
             key: 'Point' + d.OBSERVATION_NUMBER,
             values: [
@@ -52,7 +45,6 @@
             ]
           };
         });
-        // console.log(points);
 
         var pollenData = {
           key: 'Pollen',

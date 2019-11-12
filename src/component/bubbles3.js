@@ -15,6 +15,7 @@ export default function() {
 	let colors = d3.schemeRdYlGn[8];
 	let color;
 	let classed = "d3X3dBubbles";
+	let mappings;
 
 	/* Scales */
 	let xScale;
@@ -25,47 +26,78 @@ export default function() {
 	let sizeRange = [0.2, 4.0];
 
 	/**
+	 * Array to String
+	 *
+	 * @private
+	 * @param {array} arr
+	 * @returns {string}
+	 */
+	const array2dToString = function(arr) {
+		return arr.reduce((a, b) => a.concat(b), [])
+			.reduce((a, b) => a.concat(b), [])
+			.join(" ");
+	};
+
+	/**
 	 * Initialise Data and Scales
 	 *
 	 * @private
 	 * @param {Array} data - Chart data.
 	 */
 	const init = function(data) {
-		const { valueExtent, coordinatesExtent } = dataTransform(data).summary();
-		const { x: extentX, y: extentY, z: extentZ } = coordinatesExtent;
-		const { x: dimensionX, y: dimensionY, z: dimensionZ } = dimensions;
+		let newData = {};
+		['x', 'y', 'z', 'size', 'color'].forEach((dimension) => {
+			let set = {
+				key: dimension,
+				values: []
+			};
+
+			data.values.forEach((d) => {
+				let key = mappings[dimension];
+				let value = d.values.find((v) => v.key === key).value;
+				set.values.push({ key: key, value: value });
+			});
+
+			newData[dimension] = dataTransform(set).summary();
+		});
+
+		let extentX = newData.x.valueExtent;
+		let extentY = newData.y.valueExtent;
+		let extentZ = newData.z.valueExtent;
+		let extentSize = newData.size.valueExtent;
+		let extentColor = newData.color.valueExtent;
 
 		if (typeof xScale === "undefined") {
 			xScale = d3.scaleLinear()
 				.domain(extentX)
-				.range([0, dimensionX]);
+				.range([0, dimensions.x]);
 		}
 
 		if (typeof yScale === "undefined") {
 			yScale = d3.scaleLinear()
 				.domain(extentY)
-				.range([0, dimensionY]);
+				.range([0, dimensions.y]);
 		}
 
 		if (typeof zScale === "undefined") {
 			zScale = d3.scaleLinear()
 				.domain(extentZ)
-				.range([0, dimensionZ]);
+				.range([0, dimensions.z]);
 		}
 
 		if (typeof sizeScale === "undefined") {
 			sizeScale = d3.scaleLinear()
-				.domain(valueExtent)
+				.domain(extentSize)
 				.range(sizeRange);
 		}
 
 		if (color) {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range([color, color]);
 		} else if (typeof colorScale === "undefined") {
 			colorScale = d3.scaleQuantize()
-				.domain(valueExtent)
+				.domain(extentColor)
 				.range(colors);
 		}
 	};
@@ -85,46 +117,64 @@ export default function() {
 				.classed(classed, true)
 				.attr("id", (d) => d.key);
 
-			const shape = (el) => {
-				const shape = el.append("Shape");
+			const particleData = function(data) {
+				const pointSizes = function(Y) {
+					return Y.values.map(function(d) {
+						let sizeVal = d.values.find((v) => v.key === mappings.size).value;
+						return [sizeScale(sizeVal), sizeScale(sizeVal), sizeScale(sizeVal)];
+					})
+				};
 
-				attachEventListners(shape);
+				const pointCoords = function(Y) {
+					return Y.values.map(function(d) {
+						let xVal = d.values.find((v) => v.key === mappings.x).value;
+						let yVal = d.values.find((v) => v.key === mappings.y).value;
+						let zVal = d.values.find((v) => v.key === mappings.z).value;
+						return [xScale(xVal), yScale(yVal), zScale(zVal)];
+					})
+				};
 
-				shape.append("Sphere")
-					.attr("radius", (d) => sizeScale(d.value));
+				const pointColors = function(Y) {
+					return Y.values.map(function(d) {
+						let colorVal = d.values.find((v) => v.key === mappings.color).value;
+						let color = d3.color(colorScale(colorVal));
+						return colorParse(color);
+					})
+				};
 
-				shape.append("Appearance")
-					.append("Material")
-					.attr("diffuseColor", (d) => colorParse(colorScale(d.value)))
-					.attr("ambientIntensity", 0.1);
+				data.point = array2dToString(pointCoords(data));
+				data.color = array2dToString(pointColors(data));
+				data.size = array2dToString(pointSizes(data));
 
-				return shape;
+				return [data];
 			};
 
-			const bubbles = element.selectAll(".bubble")
-				.data((d) => d.values, (d) => d.key);
+			const particles = element.selectAll(".particles")
+				.data((d) => particleData(d), (d) => d.key);
 
-			const bubblesEnter = bubbles.enter()
-				.append("Transform")
-				.attr("class", "bubble")
-				.call(shape)
-				.merge(bubbles)
-				.transition();
+			const particleSelect = particles
+				.enter()
+				.append("Shape")
+				.classed("particles", true);
 
-			bubblesEnter
-				.attr("translation", (d) => (xScale(d.x) + " " + yScale(d.y) + " " + zScale(d.z)));
+			const appearance = particleSelect.append("Appearance");
+			appearance.append("Material");
+			appearance.append("DepthMode")
+				.attr("readOnly", "true");
+			// appearance.append("ImageTexture")
+			//	.attr("url", "./circle_texture.png");
 
-			bubblesEnter.select("Shape")
-				.select("Appearance")
-				.select("Material")
-				.attr("diffuseColor", (d) => colorParse(colorScale(d.value)));
+			const pSet = particleSelect.append("ParticleSet")
+				.attr("size", (d) => d.size)
+				.attr("drawOrder", "backToFront");
 
-			bubblesEnter.select("Shape")
-				.select("Sphere")
-				.attr("radius", (d) => sizeScale(d.value));
+			pSet.append("Coordinate")
+				.attr("point", (d) => d.point);
 
-			bubbles.exit()
-				.remove();
+			pSet.append("Color")
+				.attr("color", (d) => d.color);
+
+			particleSelect.merge(particles);
 		});
 	};
 
@@ -233,6 +283,18 @@ export default function() {
 	my.colors = function(_v) {
 		if (!arguments.length) return colors;
 		colors = _v;
+		return my;
+	};
+
+	/**
+	 * Mappings Getter / Setter
+	 *
+	 * @param {Object}
+	 * @returns {*}
+	 */
+	my.mappings = function(_v) {
+		if (!arguments.length) return mappings;
+		mappings = _v;
 		return my;
 	};
 

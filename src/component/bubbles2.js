@@ -23,7 +23,7 @@ export default function() {
 	let zScale;
 	let colorScale;
 	let sizeScale;
-	let sizeRange = [0.5, 4.0];
+	let sizeRange = [0.2, 4.0];
 
 	/**
 	 * Initialise Data and Scales

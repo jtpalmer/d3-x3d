@@ -2685,6 +2685,317 @@
   }
 
   /**
+   * Reusable 3D Bubble Chart Component
+   *
+   * @module
+   */
+  function componentBubbles3 () {
+
+  	/* Default Properties */
+  	var dimensions = { x: 40, y: 40, z: 40 };
+  	var colors = d3.schemeRdYlGn[8];
+  	var color = void 0;
+  	var classed = "d3X3dBubbles";
+  	var mappings = void 0;
+
+  	/* Scales */
+  	var xScale = void 0;
+  	var yScale = void 0;
+  	var zScale = void 0;
+  	var colorScale = void 0;
+  	var sizeScale = void 0;
+  	var sizeRange = [0.5, 4.0];
+
+  	/**
+    * Array to String
+    *
+    * @private
+    * @param {array} arr
+    * @returns {string}
+    */
+  	var array2dToString = function array2dToString(arr) {
+  		return arr.reduce(function (a, b) {
+  			return a.concat(b);
+  		}, []).reduce(function (a, b) {
+  			return a.concat(b);
+  		}, []).join(" ");
+  	};
+
+  	/**
+    * Initialise Data and Scales
+    *
+    * @private
+    * @param {Array} data - Chart data.
+    */
+  	var init = function init(data) {
+  		var newData = {};
+  		['x', 'y', 'z', 'size', 'color'].forEach(function (dimension) {
+  			var set = {
+  				key: dimension,
+  				values: []
+  			};
+
+  			data.values.forEach(function (d) {
+  				var key = mappings[dimension];
+  				var value = d.values.find(function (v) {
+  					return v.key === key;
+  				}).value;
+  				set.values.push({ key: key, value: value });
+  			});
+
+  			newData[dimension] = dataTransform(set).summary();
+  		});
+
+  		var extentX = newData.x.valueExtent;
+  		var extentY = newData.y.valueExtent;
+  		var extentZ = newData.z.valueExtent;
+  		var extentSize = newData.size.valueExtent;
+  		var extentColor = newData.color.valueExtent;
+
+  		if (typeof xScale === "undefined") {
+  			xScale = d3.scaleLinear().domain(extentX).range([0, dimensions.x]);
+  		}
+
+  		if (typeof yScale === "undefined") {
+  			yScale = d3.scaleLinear().domain(extentY).range([0, dimensions.y]);
+  		}
+
+  		if (typeof zScale === "undefined") {
+  			zScale = d3.scaleLinear().domain(extentZ).range([0, dimensions.z]);
+  		}
+
+  		if (typeof sizeScale === "undefined") {
+  			sizeScale = d3.scaleLinear().domain(extentSize).range(sizeRange);
+  		}
+
+  		if (color) {
+  			colorScale = d3.scaleQuantize().domain(extentColor).range([color, color]);
+  		} else if (typeof colorScale === "undefined") {
+  			colorScale = d3.scaleQuantize().domain(extentColor).range(colors);
+  		}
+  	};
+
+  	/**
+    * Constructor
+    *
+    * @constructor
+    * @alias bubbles
+    * @param {d3.selection} selection - The chart holder D3 selection.
+    */
+  	var my = function my(selection) {
+  		selection.each(function (data) {
+  			init(data);
+
+  			var element = d3.select(this).classed(classed, true).attr("id", function (d) {
+  				return d.key;
+  			});
+
+  			var particleData = function particleData(data) {
+  				var pointSizes = function pointSizes(Y) {
+  					return Y.values.map(function (d) {
+  						var sizeVal = d.values.find(function (v) {
+  							return v.key === mappings.size;
+  						}).value;
+  						return [sizeScale(sizeVal), sizeScale(sizeVal), sizeScale(sizeVal)];
+  					});
+  				};
+
+  				var pointCoords = function pointCoords(Y) {
+  					return Y.values.map(function (d) {
+  						var xVal = d.values.find(function (v) {
+  							return v.key === mappings.x;
+  						}).value;
+  						var yVal = d.values.find(function (v) {
+  							return v.key === mappings.y;
+  						}).value;
+  						var zVal = d.values.find(function (v) {
+  							return v.key === mappings.z;
+  						}).value;
+  						return [xScale(xVal), yScale(yVal), zScale(zVal)];
+  					});
+  				};
+
+  				var pointColors = function pointColors(Y) {
+  					return Y.values.map(function (d) {
+  						var colorVal = d.values.find(function (v) {
+  							return v.key === mappings.color;
+  						}).value;
+  						var color = d3.color(colorScale(colorVal));
+  						return colorParse(color);
+  					});
+  				};
+
+  				data.point = array2dToString(pointCoords(data));
+  				data.color = array2dToString(pointColors(data));
+  				data.size = array2dToString(pointSizes(data));
+
+  				return [data];
+  			};
+
+  			var particles = element.selectAll(".particles").data(function (d) {
+  				return particleData(d);
+  			}, function (d) {
+  				return d.key;
+  			});
+
+  			var particleSelect = particles.enter().append("Shape").classed("particles", true);
+
+  			var appearance = particleSelect.append("Appearance");
+  			appearance.append("Material");
+  			appearance.append("DepthMode").attr("readOnly", "true");
+  			//appearance.append("ImageTexture")
+  			//	.attr("url", "./circle_texture.png");
+
+  			var pSet = particleSelect.append("ParticleSet").attr("size", function (d) {
+  				return d.size;
+  			}).attr("drawOrder", "backToFront");
+
+  			pSet.append("Coordinate").attr("point", function (d) {
+  				return d.point;
+  			});
+
+  			pSet.append("Color").attr("color", function (d) {
+  				return d.color;
+  			});
+
+  			particleSelect.merge(particles);
+  		});
+  	};
+
+  	/**
+    * Dimensions Getter / Setter
+    *
+    * @param {{x: number, y: number, z: number}} _v - 3D object dimensions.
+    * @returns {*}
+    */
+  	my.dimensions = function (_v) {
+  		if (!arguments.length) return dimensions;
+  		dimensions = _v;
+  		return this;
+  	};
+
+  	/**
+    * X Scale Getter / Setter
+    *
+    * @param {d3.scale} _v - D3 scale.
+    * @returns {*}
+    */
+  	my.xScale = function (_v) {
+  		if (!arguments.length) return xScale;
+  		xScale = _v;
+  		return my;
+  	};
+
+  	/**
+    * Y Scale Getter / Setter
+    *
+    * @param {d3.scale} _v - D3 scale.
+    * @returns {*}
+    */
+  	my.yScale = function (_v) {
+  		if (!arguments.length) return yScale;
+  		yScale = _v;
+  		return my;
+  	};
+
+  	/**
+    * Z Scale Getter / Setter
+    *
+    * @param {d3.scale} _v - D3 scale.
+    * @returns {*}
+    */
+  	my.zScale = function (_v) {
+  		if (!arguments.length) return zScale;
+  		zScale = _v;
+  		return my;
+  	};
+
+  	/**
+    * Size Scale Getter / Setter
+    *
+    * @param {d3.scale} _v - D3 size scale.
+    * @returns {*}
+    */
+  	my.sizeScale = function (_v) {
+  		if (!arguments.length) return sizeScale;
+  		sizeScale = _v;
+  		return my;
+  	};
+
+  	/**
+    * Size Range Getter / Setter
+    *
+    * @param {number[]} _v - Size min and max (e.g. [1, 9]).
+    * @returns {*}
+    */
+  	my.sizeRange = function (_v) {
+  		if (!arguments.length) return sizeRange;
+  		sizeRange = _v;
+  		return my;
+  	};
+
+  	/**
+    * Color Scale Getter / Setter
+    *
+    * @param {d3.scale} _v - D3 color scale.
+    * @returns {*}
+    */
+  	my.colorScale = function (_v) {
+  		if (!arguments.length) return colorScale;
+  		colorScale = _v;
+  		return my;
+  	};
+
+  	/**
+    * Color Getter / Setter
+    *
+    * @param {string} _v - Color (e.g. "red" or "#ff0000").
+    * @returns {*}
+    */
+  	my.color = function (_v) {
+  		if (!arguments.length) return color;
+  		color = _v;
+  		return my;
+  	};
+
+  	/**
+    * Colors Getter / Setter
+    *
+    * @param {Array} _v - Array of colours used by color scale.
+    * @returns {*}
+    */
+  	my.colors = function (_v) {
+  		if (!arguments.length) return colors;
+  		colors = _v;
+  		return my;
+  	};
+
+  	/**
+    * Mappings Getter / Setter
+    *
+    * @param {Object}
+    * @returns {*}
+    */
+  	my.mappings = function (_v) {
+  		if (!arguments.length) return mappings;
+  		mappings = _v;
+  		return my;
+  	};
+
+  	/**
+    * Dispatch On Getter
+    *
+    * @returns {*}
+    */
+  	my.on = function () {
+  		var value = dispatch.on.apply(dispatch, arguments);
+  		return value === dispatch ? my : value;
+  	};
+
+  	return my;
+  }
+
+  /**
    * Reusable 3D Multi Series Bubble Chart Component
    *
    * @module
@@ -5118,6 +5429,7 @@
   	barsMultiSeries: componentBarsMultiSeries,
   	bubbles: componentBubbles,
   	bubbles2: componentBubbles2,
+  	bubbles3: componentBubbles3,
   	bubblesMultiSeries: componentBubblesMultiSeries,
   	crosshair: componentCrosshair,
   	label: componentLabel,
@@ -6601,7 +6913,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.2];
+  	var sizeRange = [0.5, 4.0];
 
   	/* Components */
   	var viewpoint = component.viewpoint();
@@ -6929,12 +7241,12 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.2];
+  	var sizeRange = [0.5, 4.0];
 
   	/* Components */
   	var viewpoint = component.viewpoint();
   	var axis = component.axisThreePlane();
-  	var bubbles = component.bubbles2();
+  	var bubbles = component.bubbles3();
 
   	/**
     * Initialise Data and Scales

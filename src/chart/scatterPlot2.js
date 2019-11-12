@@ -40,12 +40,12 @@ export default function() {
 	let zScale;
 	let colorScale;
 	let sizeScale;
-	let sizeRange = [0.2];
+	let sizeRange = [0.2, 4.0];
 
 	/* Components */
 	const viewpoint = component.viewpoint();
 	const axis = component.axisThreePlane();
-	const bubbles = component.bubbles2();
+	const bubbles = component.bubbles3();
 
 	/**
 	 * Initialise Data and Scales
