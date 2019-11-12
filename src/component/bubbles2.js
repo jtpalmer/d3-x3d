@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import dataTransform from "../dataTransform";
-import { dispatch, attachEventListners } from "../events";
+import { dispatch } from "../events";
 import { colorParse } from "../colorHelper";
 
 /**
@@ -106,8 +106,6 @@ export default function() {
 
 			const shape = (el) => {
 				const shape = el.append("Shape");
-
-				attachEventListners(shape);
 
 				shape.append("Sphere")
 					.attr("radius", (d) => {

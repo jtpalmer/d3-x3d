@@ -2178,7 +2178,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.5, 4.0];
+  	var sizeRange = [0.2, 4.0];
 
   	/**
     * Initialise Data and Scales
@@ -2419,7 +2419,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.5, 4.0];
+  	var sizeRange = [0.2, 4.0];
 
   	/**
     * Initialise Data and Scales
@@ -2492,8 +2492,6 @@
 
   			var shape = function shape(el) {
   				var shape = el.append("Shape");
-
-  				attachEventListners(shape);
 
   				shape.append("Sphere").attr("radius", function (d) {
   					var sizeVal = d.values.find(function (v) {
@@ -2704,7 +2702,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.5, 4.0];
+  	var sizeRange = [0.2, 4.0];
 
   	/**
     * Array to String
@@ -2843,7 +2841,7 @@
   			var appearance = particleSelect.append("Appearance");
   			appearance.append("Material");
   			appearance.append("DepthMode").attr("readOnly", "true");
-  			//appearance.append("ImageTexture")
+  			// appearance.append("ImageTexture")
   			//	.attr("url", "./circle_texture.png");
 
   			var pSet = particleSelect.append("ParticleSet").attr("size", function (d) {
@@ -6913,7 +6911,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.5, 4.0];
+  	var sizeRange = [0.2];
 
   	/* Components */
   	var viewpoint = component.viewpoint();
@@ -7241,7 +7239,7 @@
   	var zScale = void 0;
   	var colorScale = void 0;
   	var sizeScale = void 0;
-  	var sizeRange = [0.5, 4.0];
+  	var sizeRange = [0.2, 4.0];
 
   	/* Components */
   	var viewpoint = component.viewpoint();
