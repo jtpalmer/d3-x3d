@@ -4,7 +4,7 @@ import { dispatch } from "../events";
 import { colorParse } from "../colorHelper";
 
 /**
- * Reusable 3D Bubble Chart Component
+ * Reusable 3D Particle Plot Component
  *
  * @module
  */
@@ -24,6 +24,19 @@ export default function() {
 	let colorScale;
 	let sizeScale;
 	let sizeRange = [0.2, 4.0];
+
+	/**
+	 * Array to String
+	 *
+	 * @private
+	 * @param {array} arr
+	 * @returns {string}
+	 */
+	const array2dToString = function(arr) {
+		return arr.reduce((a, b) => a.concat(b), [])
+			.reduce((a, b) => a.concat(b), [])
+			.join(" ");
+	};
 
 	/**
 	 * Initialise Data and Scales
@@ -104,61 +117,72 @@ export default function() {
 				.classed(classed, true)
 				.attr("id", (d) => d.key);
 
-			const shape = (el) => {
-				const shape = el.append("Shape");
-
-				shape.append("Sphere")
-					.attr("radius", (d) => {
+			const particleData = function(data) {
+				const pointSizes = function(Y) {
+					return Y.values.map(function(d) {
 						let sizeVal = d.values.find((v) => v.key === mappings.size).value;
-						return sizeScale(sizeVal);
-					});
-
-				shape.append("Appearance")
-					.append("Material")
-					.attr("diffuseColor", (d) => {
-						let colorVal = d.values.find((v) => v.key === mappings.color).value;
-						return colorParse(colorScale(colorVal));
+						return [sizeScale(sizeVal), sizeScale(sizeVal), sizeScale(sizeVal)];
 					})
-					.attr("ambientIntensity", 0.1);
+				};
 
-				return shape;
+				const pointCoords = function(Y) {
+					return Y.values.map(function(d) {
+						let xVal = d.values.find((v) => v.key === mappings.x).value;
+						let yVal = d.values.find((v) => v.key === mappings.y).value;
+						let zVal = d.values.find((v) => v.key === mappings.z).value;
+						return [xScale(xVal), yScale(yVal), zScale(zVal)];
+					})
+				};
+
+				const pointColors = function(Y) {
+					return Y.values.map(function(d) {
+						let colorVal = d.values.find((v) => v.key === mappings.color).value;
+						let color = d3.color(colorScale(colorVal));
+						return colorParse(color);
+					})
+				};
+
+				data.size = array2dToString(pointSizes(data));
+				data.point = array2dToString(pointCoords(data));
+				data.color = array2dToString(pointColors(data));
+
+				return [data];
 			};
 
-			const bubbles = element.selectAll(".bubble")
-				.data((d) => d.values, (d) => d.key);
+			const particles = element.selectAll(".particles")
+				.data((d) => particleData(d), (d) => d.key);
 
-			const bubblesEnter = bubbles.enter()
-				.append("Transform")
-				.attr("class", "bubble")
-				.call(shape)
-				.merge(bubbles)
-				.transition();
+			const particleSelect = particles
+				.enter()
+				.append("Shape")
+				.classed("particles", true);
 
-			bubblesEnter
-				.attr("translation", (d) => {
-					let xVal = d.values.find((v) => v.key === mappings.x).value;
-					let yVal = d.values.find((v) => v.key === mappings.y).value;
-					let zVal = d.values.find((v) => v.key === mappings.z).value;
-					return xScale(xVal) + " " + yScale(yVal) + " " + zScale(zVal);
-				});
+			const appearance = particleSelect.append("Appearance");
+			//appearance.append("Material");
+			//appearance.append("DepthMode")
+				//.attr("readOnly", "true");
+			//appearance.append("ImageTexture")
+			//	.attr("url", "./circle_texture.png");
 
-			bubblesEnter.select("Shape")
-				.select("Sphere")
-				.attr("radius", (d) => {
-					let sizeVal = d.values.find((v) => v.key === mappings.size).value;
-					return sizeScale(sizeVal);
-				});
+			appearance.append("PointProperties")
+				.attr("colorMode", "POINT_COLOR")
+				.attr("pointSizeMaxValue", 100)
+				.attr("pointSizeMinValue", 1)
+				.attr("pointSizeScaleFactor", 4);
 
-			bubblesEnter.select("Shape")
-				.select("Appearance")
-				.select("Material")
-				.attr("diffuseColor", (d) => {
-					let colorVal = d.values.find((v) => v.key === mappings.color).value;
-					return colorParse(colorScale(colorVal));
-				});
+			// <PointProperties colorMode='POINT_COLOR' pointSizeMaxValue='100' pointSizeMinValue='1' pointSizeScaleFactor='4'/>
 
-			bubbles.exit()
-				.remove();
+			const pSet = particleSelect.append("PointSet");
+				//.attr("size", (d) => d.size)
+				//.attr("drawOrder", "backToFront");
+
+			pSet.append("Coordinate")
+				.attr("point", (d) => d.point);
+
+			pSet.append("Color")
+				.attr("color", (d) => d.color);
+
+			particleSelect.merge(particles);
 		});
 	};
 

@@ -4,7 +4,7 @@ import component from "../component";
 import { dispatch } from "../events";
 
 /**
- * Reusable 3D Scatter Plot Chart
+ * Reusable 3D Particle Plot Chart
  *
  * @module
  *
@@ -13,7 +13,7 @@ import { dispatch } from "../events";
  *
  * let myData = [...];
  *
- * let myChart = d3.x3d.chart.scatterPlot();
+ * let myChart = d3.x3d.chart.particlePlot();
  *
  * chartHolder.datum(myData).call(myChart);
  *
@@ -30,9 +30,9 @@ export default function() {
 	let dimensions = { x: 40, y: 40, z: 40 };
 	let colors = ["orange"];
 	let color;
-	let classed = "d3X3dScatterPlot";
-	let debug = false;
+	let classed = "d3X3dParticlePlot";
 	let mappings;
+	let debug = false;
 
 	/* Scales */
 	let xScale;
@@ -45,7 +45,7 @@ export default function() {
 	/* Components */
 	const viewpoint = component.viewpoint();
 	const axis = component.axisThreePlane();
-	const bubbles = component.bubbles3();
+	const particles = component.particles();
 
 	/**
 	 * Initialise Data and Scales
@@ -129,7 +129,7 @@ export default function() {
 			.attr("skyColor", "1 1 1");
 
 		// Update the chart dimensions and add layer groups
-		const layers = ["axis", "bubbles", "crosshair", "label"];
+		const layers = ["axis", "particles", "crosshair"];
 		scene.classed(classed, true)
 			.selectAll("Group")
 			.data(layers)
@@ -154,16 +154,16 @@ export default function() {
 				.call(axis);
 
 			// Add Bubbles
-			bubbles.xScale(xScale)
+			particles.xScale(xScale)
 				.mappings(mappings)
 				.yScale(yScale)
 				.zScale(zScale)
 				.sizeScale(sizeScale)
 				.colorScale(colorScale);
 
-			scene.select(".bubbles")
+			scene.select(".particles")
 				.datum(data)
-				.call(bubbles);
+				.call(particles);
 		});
 	};
 
@@ -326,7 +326,7 @@ export default function() {
 	/**
 	 * Mappings Getter / Setter
 	 *
-	 * @param {Object}
+	 * @param {Object} _v - Color, Size, Mappings.
 	 * @returns {*}
 	 */
 	my.mappings = function(_v) {

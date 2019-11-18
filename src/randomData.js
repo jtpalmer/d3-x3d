@@ -81,10 +81,13 @@ export function dataset3(points = 10) {
 		values: d3.range(points).map(function(d, i) {
 			return {
 				key: "Point" + i,
-				value: randomNum(),
-				x: randomNum(),
-				y: randomNum(),
-				z: randomNum()
+				values: [
+					{ key: "size", value: randomNum() },
+					{ key: "color", value: randomNum() },
+					{ key: "x", value: randomNum() },
+					{ key: "y", value: randomNum() },
+					{ key: "z", value: randomNum() }
+				]
 			};
 		})
 	};

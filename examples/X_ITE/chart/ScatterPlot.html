@@ -21,6 +21,7 @@
 
     // Declare the chart component
     var myChart = d3.x3d.chart.scatterPlot()
+      .mappings({ x: 'x', y: 'y', z: 'z', size: 'size', color: 'color' })
       .colors(d3.schemeRdYlGn[8])
       .sizeRange([0.1, 1.5]);
 
