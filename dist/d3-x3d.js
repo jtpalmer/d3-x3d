@@ -3759,38 +3759,37 @@
   				return [data];
   			};
 
-  			var particles = element.selectAll(".particles").data(function (d) {
+  			var particles = element.selectAll(".particle").data(function (d) {
   				return particleData(d);
   			}, function (d) {
   				return d.key;
   			});
 
-  			var particleSelect = particles.enter().append("Shape").classed("particles", true);
+  			var particlesEnter = particles.enter().append("Shape").classed("particle", true);
 
-  			var appearance = particleSelect.append("Appearance");
-  			//appearance.append("Material");
-  			//appearance.append("DepthMode")
-  			//.attr("readOnly", "true");
-  			//appearance.append("ImageTexture")
-  			//	.attr("url", "./circle_texture.png");
+  			var appearance = particlesEnter.append("Appearance");
 
-  			appearance.append("PointProperties").attr("colorMode", "POINT_COLOR").attr("pointSizeMaxValue", 100).attr("pointSizeMinValue", 1).attr("pointSizeScaleFactor", 4);
+  			appearance.append("PointProperties").attr("colorMode", "POINT_COLOR").attr("pointSizeMinValue", 1).attr("pointSizeMaxValue", 100).attr("pointSizeScaleFactor", 5);
 
-  			// <PointProperties colorMode='POINT_COLOR' pointSizeMaxValue='100' pointSizeMinValue='1' pointSizeScaleFactor='4'/>
+  			var pointset = particlesEnter.append("PointSet");
 
-  			var pSet = particleSelect.append("PointSet");
-  			//.attr("size", (d) => d.size)
-  			//.attr("drawOrder", "backToFront");
-
-  			pSet.append("Coordinate").attr("point", function (d) {
+  			pointset.append("Coordinate").attr("point", function (d) {
   				return d.point;
   			});
 
-  			pSet.append("Color").attr("color", function (d) {
+  			pointset.append("Color").attr("color", function (d) {
   				return d.color;
   			});
 
-  			particleSelect.merge(particles);
+  			var particleTransition = particlesEnter.merge(particles).transition();
+
+  			particleTransition.select("PointSet").select("Coordinate").attr("point", function (d) {
+  				return d.point;
+  			});
+
+  			particleTransition.select("PointSet").select("Color").attr("color", function (d) {
+  				return d.color;
+  			});
   		});
   	};
 
@@ -6504,6 +6503,7 @@
   		// Create x3d element (if it does not exist already)
   		if (!x3d) {
   			x3d = selection.append("X3D");
+  			x3d.attr("profile", "Full");
   			scene = x3d.append("Scene");
   		}
 
@@ -6534,7 +6534,7 @@
 
   			scene.select(".axis").call(axis);
 
-  			// Add Bubbles
+  			// Add Particles
   			particles.xScale(xScale).mappings(mappings).yScale(yScale).zScale(zScale).sizeScale(sizeScale).colorScale(colorScale);
 
   			scene.select(".particles").datum(data).call(particles);

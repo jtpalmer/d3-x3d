@@ -149,40 +149,42 @@ export default function() {
 				return [data];
 			};
 
-			const particles = element.selectAll(".particles")
+			const particles = element.selectAll(".particle")
 				.data((d) => particleData(d), (d) => d.key);
 
-			const particleSelect = particles
-				.enter()
+			const particlesEnter = particles.enter()
 				.append("Shape")
-				.classed("particles", true);
+				.classed("particle", true);
 
-			const appearance = particleSelect.append("Appearance");
-			//appearance.append("Material");
-			//appearance.append("DepthMode")
-				//.attr("readOnly", "true");
-			//appearance.append("ImageTexture")
-			//	.attr("url", "./circle_texture.png");
+			const appearance = particlesEnter
+				.append("Appearance");
 
 			appearance.append("PointProperties")
 				.attr("colorMode", "POINT_COLOR")
-				.attr("pointSizeMaxValue", 100)
 				.attr("pointSizeMinValue", 1)
-				.attr("pointSizeScaleFactor", 4);
+				.attr("pointSizeMaxValue", 100)
+				.attr("pointSizeScaleFactor", 5);
 
-			// <PointProperties colorMode='POINT_COLOR' pointSizeMaxValue='100' pointSizeMinValue='1' pointSizeScaleFactor='4'/>
+			const pointset = particlesEnter
+				.append("PointSet");
 
-			const pSet = particleSelect.append("PointSet");
-				//.attr("size", (d) => d.size)
-				//.attr("drawOrder", "backToFront");
-
-			pSet.append("Coordinate")
+			pointset.append("Coordinate")
 				.attr("point", (d) => d.point);
 
-			pSet.append("Color")
+			pointset.append("Color")
 				.attr("color", (d) => d.color);
 
-			particleSelect.merge(particles);
+			const particleTransition = particlesEnter
+				.merge(particles)
+				.transition();
+
+			particleTransition.select("PointSet")
+				.select("Coordinate")
+				.attr("point", (d) => d.point);
+
+			particleTransition.select("PointSet")
+				.select("Color")
+				.attr("color", (d) => d.color);
 		});
 	};
 

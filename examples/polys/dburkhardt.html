@@ -13,10 +13,12 @@
   <div id="chartholder"></div>
 
   <script>
-    d3.csv("https://experimentaldesign.io/data/MNIST_PHATE_3D.csv")
+
+    // Source: https://experimentaldesign.io/data/MNIST_PHATE_3D.csv
+    d3.csv("data/MNIST_PHATE_3D.csv")
       .then(function(data) {
 
-        var points = data.slice(0, 1000).map((d, i) => {
+        var points = data.slice(0, 4000).map((d, i) => {
           return {
             key: 'Point_' + i,
             values: [

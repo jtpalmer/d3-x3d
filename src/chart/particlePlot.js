@@ -115,6 +115,7 @@ export default function() {
 		// Create x3d element (if it does not exist already)
 		if (!x3d) {
 			x3d = selection.append("X3D");
+			x3d.attr("profile", "Full");
 			scene = x3d.append("Scene");
 		}
 
@@ -153,7 +154,7 @@ export default function() {
 			scene.select(".axis")
 				.call(axis);
 
-			// Add Bubbles
+			// Add Particles
 			particles.xScale(xScale)
 				.mappings(mappings)
 				.yScale(yScale)
