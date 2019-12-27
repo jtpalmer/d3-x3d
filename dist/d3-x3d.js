@@ -8230,6 +8230,31 @@
   		values: d3.range(points).map(function (d, i) {
   			return {
   				key: "Point" + i,
+  				value: randomNum(),
+  				x: randomNum(),
+  				y: randomNum(),
+  				z: randomNum()
+  			};
+  		})
+  	};
+
+  	return data;
+  }
+
+  /**
+   * Random Dataset - Single Series Scatter Plot 2
+   *
+   * @param {number} points - Number of data points.
+   * @returns {Array}
+   */
+  function dataset3a() {
+  	var points = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 10;
+
+  	var data = {
+  		key: "Bubbles",
+  		values: d3.range(points).map(function (d, i) {
+  			return {
+  				key: "Point" + i,
   				values: [{ key: "size", value: randomNum() }, { key: "color", value: randomNum() }, { key: "x", value: randomNum() }, { key: "y", value: randomNum() }, { key: "z", value: randomNum() }]
   			};
   		})
@@ -8307,6 +8332,7 @@
     dataset1: dataset1,
     dataset2: dataset2,
     dataset3: dataset3,
+    dataset3a: dataset3a,
     dataset4: dataset4,
     dataset5: dataset5
   });
